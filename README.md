@@ -8,3 +8,7 @@ In progress...
 ```
 yarn start
 ```
+
+# TODO:
+- Films
+- Notes

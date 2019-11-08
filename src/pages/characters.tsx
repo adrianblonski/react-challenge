@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import loadingImg from '../media/images/loading.png';
+
 import CharacterItem from '../components/character_item/main';
 
 interface State {
@@ -63,11 +65,11 @@ class CharactersPage extends Component<{}, State> {
     const { characters, loading } = this.state;
 
     return (
-      <div id="container" className="characters-container">
+      <div id="container" className="characters">
         {characters.map((character: string, index: number) => {
           return <CharacterItem key={index.toString()} name={character} index={index+1} />
         })}
-        {loading ? <div className="loading">Loading...</div> : null }
+        {loading ? <img src={loadingImg} className="img-loading" alt="Loading..." /> : null }
       </div>
     )
   }

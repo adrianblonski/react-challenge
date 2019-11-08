@@ -10,13 +10,17 @@ class App extends Component<{}, {}> {
   render() {
     return (
       <Router>
-        <Header />
-        <Switch>
-          <Redirect exact from="/" to="/characters" />
-          <Route exact path="/characters" component={CharactersPage} />
-          <Route exact path="/characters/:id" component={Details} />
-          <Route component={NotFound} />
-        </Switch>
+        <div className="wrapper">
+          <div className="container col-xl-8 col-12 offset-xl-2">
+            <Header />
+            <Switch>
+              <Redirect exact from="/" to="/characters" />
+              <Route exact path="/characters" component={CharactersPage} />
+              <Route exact path="/characters/:id" component={Details} />
+              <Route component={NotFound} />
+            </Switch>
+          </div>
+        </div>
       </Router>
     );
   }

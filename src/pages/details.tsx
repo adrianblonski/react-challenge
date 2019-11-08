@@ -1,6 +1,9 @@
 import React, { Component } from 'react'
 import { RouteComponentProps } from 'react-router-dom';
 
+import loadingImg from '../media/images/loading.png';
+import yoda from '../media/images/reading-yoda.png';
+
 interface RouteInfo {
   id: string
 }
@@ -77,15 +80,46 @@ class Details extends Component<Props, State> {
   }
 
   render() {
-    if(this.state.loading) return (<div className="loading">Loading...</div>);
+    if(this.state.loading) 
+      return (
+        <div className="centered">
+          <img src={loadingImg} className="img-loading" alt="Loading..." />
+        </div>
+      );
+
+    const speciesToString = ():string => {
+      let s: string = '';
+      this.state.species.forEach((spec: string, index: number): void => {
+        if(index !== 0) s += ', ';
+        s +=  spec;
+      });
+      return s;
+    }
 
     return (
-      <div>
-        {this.state.name}    <br />
-        {this.state.gender}  <br />
-        {this.state.species} <br />
-        {this.state.height}  <br />
-        {this.state.mass}    <br />
+      <div className="row">
+        <div className="character-details col-xl-4 col-10 offset-xl-2 offset-1">
+          <div className="character-name">{this.state.name}</div>
+          <div className="character-info">
+            <div className="description">Gender:</div>
+            <div className="element">{this.state.gender}</div>
+          </div>
+          <div className="character-info">
+            <div className="description">Species:</div>
+            <div className="element">{speciesToString()}</div>
+          </div>
+          <div className="character-info">
+            <div className="description">Height:</div>
+            <div className="element">{this.state.height} cm</div>
+          </div>
+          <div className="character-info">
+            <div className="description">Mass:</div>
+            <div className="element">{this.state.mass} kg</div>
+          </div>
+        </div>
+        <div className="yoda col-xl-4 col-10 offset-xl-2 offset-1">
+          <img src={yoda} alt="yoda" />
+        </div>
       </div>
     )
   }

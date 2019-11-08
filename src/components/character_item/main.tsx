@@ -20,7 +20,7 @@ class CharacterItem extends Component<Props, {}> {
     const href = `/characters/${this.props.index}`;
     return (
       <Link to={href} className="character-item">
-        <p>{this.props.name}</p>
+        <div>{this.props.name}</div>
       </Link>
     )
   }

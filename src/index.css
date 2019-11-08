@@ -1,18 +1,94 @@
+@font-face {
+  font-family: "StarWars";
+  src: url("media/fonts/starwars/STARWARS.eot?") format("eot"),
+       url("media/fonts/starwars/STARWARS.woff") format("woff"),
+       url("media/fonts/starwars/STARWARS.ttf") format("truetype"),
+       url("media/fonts/starwars/STARWARS.svg#STARWARS") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@import url('https://fonts.googleapis.com/css?family=Oswald&display=swap');
+
 * {
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
 html, body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #eaeaea;
-  height: 100%;
+  width: 100%;
+  background:  #08415C;
 }
 
-.characters-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+.wrapper{
+  min-height: 101vh;
+}
+
+.container {
+  padding: 0;
+  min-height: 101vh;
+  background-color: #000;
+
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.characters{
+  text-align: center;
+  color: #fff;
+  overflow: hidden;
+}
+
+.centered {
+  text-align: center;
+  overflow: hidden;
+}
+
+.img-loading {
+  width: 75px;
+  animation: .8s spin infinite ease-in-out;
+  padding-bottom: 25px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.yoda {
+  margin: auto;
+}
+
+.yoda img {
+  max-width: 100%;
+}
+
+.character-details {
+  color: #fff;
+  background-color: #212529;
+  border-radius: 10px;
+  padding: 2rem;
+}
+
+.character-name {
+  font-family: 'StarWars', sans-serif;
+  font-size: 2.5rem;
+  padding-left: 1rem;
+}
+
+.character-info {
+  padding-left: 1rem;
+  font-family: 'Oswald', sans-serif;
+}
+
+.description {
+  font-size: 1.5rem;
+  color: rgb(10, 127, 182);
+}
+
+.element {
+  font-size: 2rem;
+  padding-left: 3rem;
 }
