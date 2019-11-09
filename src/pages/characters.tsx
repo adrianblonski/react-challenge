@@ -66,7 +66,7 @@ class CharactersPage extends Component<{}, State> {
     const { loading, nextPageURL } = this.state;
 
     const e: HTMLElement = document.getElementById('container');
-    if(e.getBoundingClientRect().bottom <= window.innerHeight && !loading && nextPageURL) {
+    if(e.getBoundingClientRect().bottom - 1 <= window.innerHeight && !loading && nextPageURL) {
       this.setState({ loading: true });
       this.getResponse().then(this.processResponse);
     }

@@ -2,7 +2,7 @@
 
 ### Heroku deploy
 ```
-In progress...
+https://asreact.herokuapp.com/
 ```
 ### In order to run
 ```
