@@ -6,7 +6,7 @@ import './style.css';
 interface Props {
   key: string,
   name: string,
-  index: number
+  index: string
 }
 
 class CharacterItem extends Component<Props, {}> {

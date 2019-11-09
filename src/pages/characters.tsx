@@ -5,8 +5,10 @@ import loadingImg from '../media/images/loading.png';
 import Error from '../pages/error';
 import CharacterItem from '../components/character_item/main';
 
+import { Character } from '../interfaces/character';
+
 interface State {
-  characters: string[],
+  characters: Character[],
   nextPageURL: string,
   loading: boolean,
   error: boolean
@@ -45,7 +47,12 @@ class CharactersPage extends Component<{}, State> {
   processResponse = (res: any) => {
     if(res === -1) return;
 
-    const characters: string[] = res.results.map((character: any): string => character.name);
+    const characters: Character[] = res.results.map((character: any): Character => { 
+      return {
+        id: character.url.replace('https://swapi.co/api/people/', '').slice(0, -1),
+        name: character.name
+      }
+    });
     const nextPageURL: string = res.next;
     
     this.setState({
@@ -82,8 +89,8 @@ class CharactersPage extends Component<{}, State> {
 
     return (
       <div id="container" className="characters">
-        {characters.map((character: string, index: number) => {
-          return <CharacterItem key={index.toString()} name={character} index={index+1} />
+        {characters.map((character: Character, index: number) => {
+          return <CharacterItem key={index.toString()} name={character.name} index={character.id} />
         })}
         {loading ? <img src={loadingImg} className="img-loading" alt="Loading..." /> : null }
       </div>
