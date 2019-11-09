@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 
 import loadingImg from '../media/images/loading.png';
 
+import Error from '../pages/error';
 import CharacterItem from '../components/character_item/main';
 
 interface State {
   characters: string[],
   nextPageURL: string,
-  loading: boolean
+  loading: boolean,
+  error: boolean
 }
 
 class CharactersPage extends Component<{}, State> {
@@ -17,23 +19,35 @@ class CharactersPage extends Component<{}, State> {
     this.state = {
       characters: [],
       nextPageURL: "-1",
-      loading: true
+      loading: true,
+      error: false
     };
   }
 
   getResponse = async():Promise<any> => {
     const url: string = (this.state.nextPageURL === "-1") ? 
                         'https://swapi.co/api/people/' : this.state.nextPageURL;
+    
     const response: any = await fetch(url, {method: 'GET'});
     const body: any = await response.json();
-    if(response.status !== 200) throw Error(body.message);
+    if(response.status !== 200) {
+      console.error(body.message);
+      this.setState({ 
+        error: true,
+        loading: false 
+      });
+      return -1;
+    } 
 
     return body;
   }
 
   processResponse = (res: any) => {
+    if(res === -1) return;
+
     const characters: string[] = res.results.map((character: any): string => character.name);
     const nextPageURL: string = res.next;
+    
     this.setState({
       characters: [...this.state.characters, ...characters],
       nextPageURL,
@@ -62,7 +76,9 @@ class CharactersPage extends Component<{}, State> {
   }
 
   render() {
-    const { characters, loading } = this.state;
+    const { characters, loading, error } = this.state;
+
+    if(error) return <Error />
 
     return (
       <div id="container" className="characters">

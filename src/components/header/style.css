@@ -1,12 +1,15 @@
 .header {
   position: relative;
+}
+
+.header a, .header a:hover {
   color: #212529;
 }
 
 .title{
   position: absolute;
   font-family: "StarWars", sans-serif;
-  font-size: 4rem;
+  font-size: 3.5rem;
   left: 50%;
   top: 7vh;
   transform: translate(-50%, -50%);

@@ -4,6 +4,10 @@ import { RouteComponentProps } from 'react-router-dom';
 import loadingImg from '../media/images/loading.png';
 import yoda from '../media/images/reading-yoda.png';
 
+import NotFound from './not_found';
+import Error from './error';
+import Notes from '../components/notes/main';
+
 interface RouteInfo {
   id: string
 }
@@ -13,12 +17,14 @@ interface Props extends RouteComponentProps<RouteInfo>{}
 interface State {
   loading: boolean,
   error: boolean,
+  notFound: boolean,
 
   name: string,
   gender: string,
   species: string[],
-  height: number,
-  mass: number
+  height: string,
+  mass: string,
+  films: string[]
 }
 
 class Details extends Component<Props, State> {
@@ -28,12 +34,14 @@ class Details extends Component<Props, State> {
     this.state = {
       loading: true,
       error: false,
+      notFound: false,
 
       name: '',
       gender: '',
       species: [],
-      height: 0,
-      mass: 0
+      height: '',
+      mass: '',
+      films: []
     };
   }
 
@@ -44,42 +52,81 @@ class Details extends Component<Props, State> {
     const basicResponse: any = await fetch(`https://swapi.co/api/people/${id}/`, {method: 'GET'});
     const body: any = await basicResponse.json();
     if(basicResponse.status !== 200) {
-      this.setState({ error: true });
-      throw Error(body.message);
+      if(basicResponse.status === 404) 
+        this.setState({ notFound: true });
+
+      this.setState({ 
+        error: true,
+        loading: false
+      });
+      return -1;
     }
 
     /* SPECIES */
     let species: string[] = [];
     for(let i = 0; i < body.species.length; i++) {
-      const speciesResponse: any = await fetch(body.species, {method: 'GET'});
+      const speciesResponse: any = await fetch(body.species[i], {method: 'GET'});
       const speciesBody: any = await speciesResponse.json();
-      if(basicResponse.status !== 200) {
-        this.setState({ error: true });
-        throw Error(body.message);
+      if(speciesResponse.status !== 200) {
+        this.setState({ 
+          error: true,
+          loading: false
+        });
+        console.error("Couldn't fetch data from API");
+        return -1;
       }
 
       species.push(speciesBody.name);
     }
-
     body.species = species;
+
+    /* FILMS */
+    let films: string[] = [];
+    for(let i = 0; i < body.films.length; i++) {
+      const filmsResponse: any = await fetch(body.films[i], {method: 'GET'});
+      const filmsBody: any = await filmsResponse.json();
+      if(filmsResponse.status !== 200) {
+        this.setState({ 
+          error: true,
+          loading: false
+        });
+        console.error("Couldn't fetch data from API");
+        return -1;
+      }
+
+      films.push(filmsBody.title);
+    }
+    body.films = films;
 
     return body;
   }
 
   componentDidMount () {
     this.getResponse().then((res: any) => {
+      if(res === -1) return;
+
       this.setState({
         loading: false,
+
         name: res.name,
         gender: res.gender,
         species: res.species,
-        height: parseInt(res.height),
-        mass: parseInt(res.mass)
+        height: res.height,
+        mass: res.mass,
+        films: res.films
       });
     });
+
+
   }
 
   render() {
+    if(this.state.notFound)
+      return (<NotFound />);
+
+    if(this.state.error) 
+      return (<Error />);
+
     if(this.state.loading) 
       return (
         <div className="centered">
@@ -87,22 +134,32 @@ class Details extends Component<Props, State> {
         </div>
       );
 
+    const { name, gender, species, height, mass, films } = this.state; 
+
     const speciesToString = ():string => {
       let s: string = '';
-      this.state.species.forEach((spec: string, index: number): void => {
+      species.forEach((spec: string, index: number): void => {
         if(index !== 0) s += ', ';
         s +=  spec;
       });
       return s;
     }
 
+    const heightToString = ():string => {
+      return height + (parseInt(height) ? ' cm' : '');
+    }
+
+    const massToString = (): string => {
+      return mass + (parseInt(mass) ? ' kg' : '');
+    }
+
     return (
       <div className="row">
         <div className="character-details col-xl-4 col-10 offset-xl-2 offset-1">
-          <div className="character-name">{this.state.name}</div>
+          <div className="character-name">{name}</div>
           <div className="character-info">
             <div className="description">Gender:</div>
-            <div className="element">{this.state.gender}</div>
+            <div className="element">{gender}</div>
           </div>
           <div className="character-info">
             <div className="description">Species:</div>
@@ -110,12 +167,19 @@ class Details extends Component<Props, State> {
           </div>
           <div className="character-info">
             <div className="description">Height:</div>
-            <div className="element">{this.state.height} cm</div>
+            <div className="element">{heightToString()}</div>
           </div>
           <div className="character-info">
             <div className="description">Mass:</div>
-            <div className="element">{this.state.mass} kg</div>
+            <div className="element">{massToString()}</div>
           </div>
+          <div className="character-info">
+            <div className="description">Films:</div>
+            {films.map((film: string, index: number):JSX.Element => {
+              return (<div key={index} className="element">{film}</div>);
+            })}
+          </div>
+          <Notes id={this.props.match.params.id} />
         </div>
         <div className="yoda col-xl-4 col-10 offset-xl-2 offset-1">
           <img src={yoda} alt="yoda" />
