@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios, { CancelTokenSource } from 'axios';
 
 import loadingImg from '../media/images/loading.png';
 
@@ -16,6 +15,8 @@ interface State {
 }
 
 class CharactersPage extends Component<{}, State> {
+  abortController: AbortController;
+
   constructor(props: {}) {
     super(props);
 
@@ -25,6 +26,8 @@ class CharactersPage extends Component<{}, State> {
       loading: true,
       error: false,
     };
+
+    this.abortController = new AbortController();
   }
 
   componentDidMount() {
@@ -32,48 +35,56 @@ class CharactersPage extends Component<{}, State> {
     document.documentElement.scrollTop = 0;
     document.addEventListener('scroll', this.trackScrolling);
 
-    this.getResponse().then(this.processResponse);
+    this.getResponse();
   }
 
   componentWillUnmount() {
     document.removeEventListener('scroll', this.trackScrolling);
+    this.abortController.abort();
   }
 
-  getResponse = async ():Promise<any> => {
+  getResponse = ():void => {
     const { nextPageURL } = this.state;
 
     const url: string = (nextPageURL === '-1')
       ? 'https://swapi.co/api/people/' : nextPageURL;
 
-    const response: any = await fetch(url, { method: 'GET' });
-    const body: any = await response.json();
-    if (response.status !== 200) {
-      this.setState({
-        error: true,
-        loading: false,
+    const params: any = {
+      method: 'GET',
+      signal: this.abortController.signal,
+    };
+
+    fetch(url, params)
+      .then((res: any) => {
+        if (res.status !== 200) {
+          this.setState({
+            error: true,
+            loading: false,
+          });
+          return -1;
+        }
+        return res.json();
+      })
+      .then((body: any) => {
+        if (body === -1) return;
+
+        const { characters } = this.state;
+
+        const charactersFetched: Character[] = body.results.map((character: any): Character => ({
+          id: character.url.replace('https://swapi.co/api/people/', '').slice(0, -1),
+          name: character.name,
+        }));
+
+        this.setState({
+          characters: [...characters, ...charactersFetched],
+          nextPageURL: body.next,
+          loading: false,
+        });
+      })
+      .catch((err: any) => {
+        if (err.name === 'AbortError') return;
+        throw err;
       });
-      return -1;
-    }
-
-    return body;
-  };
-
-  processResponse = (res: any) => {
-    if (res === -1) return;
-
-    const { characters } = this.state;
-
-    const charactersFetched: Character[] = res.results.map((character: any): Character => ({
-      id: character.url.replace('https://swapi.co/api/people/', '').slice(0, -1),
-      name: character.name,
-    }));
-    const nextPageURL: string = res.next;
-
-    this.setState({
-      characters: [...characters, ...charactersFetched],
-      nextPageURL,
-      loading: false,
-    });
   };
 
   trackScrolling = ():void => {
@@ -82,7 +93,7 @@ class CharactersPage extends Component<{}, State> {
     const e: HTMLElement = document.getElementById('container');
     if (e.getBoundingClientRect().bottom - 1 <= window.innerHeight && !loading && nextPageURL) {
       this.setState({ loading: true });
-      this.getResponse().then(this.processResponse);
+      this.getResponse();
     }
   };
 

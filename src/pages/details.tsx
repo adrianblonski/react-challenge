@@ -28,6 +28,8 @@ interface State {
 }
 
 class Details extends Component<Props, State> {
+  abortController: AbortController;
+
   constructor(props: Props) {
     super(props);
 
@@ -43,79 +45,125 @@ class Details extends Component<Props, State> {
       mass: '',
       films: [],
     };
+
+    this.abortController = new AbortController();
   }
 
   componentDidMount() {
-    this.getResponse().then((res: any) => {
-      if (res === -1) return;
-
-      this.setState({
-        loading: false,
-
-        name: res.name,
-        gender: res.gender,
-        species: res.species,
-        height: res.height,
-        mass: res.mass,
-        films: res.films,
-      });
-    });
+    this.getResponse();
   }
 
-  getResponse = async ():Promise<any> => {
+  componentWillUnmount() {
+    this.abortController.abort();
+  }
+
+  getResponse = (): void => {
     const { match } = this.props;
     const { id } = match.params;
 
-    /* BASIC CHARACTER DATA */
-    const basicResponse: any = await fetch(`https://swapi.co/api/people/${id}/`, { method: 'GET' });
-    const body: any = await basicResponse.json();
-    if (basicResponse.status !== 200) {
-      if (basicResponse.status === 404) { this.setState({ notFound: true }); }
+    const url = `https://swapi.co/api/people/${id}/`;
 
-      this.setState({
-        error: true,
-        loading: false,
+    const params: any = {
+      method: 'GET',
+      signal: this.abortController.signal,
+    };
+
+    fetch(url, params)
+      .then((res: any) => {
+        if (res.status !== 200) {
+          this.setState({
+            error: true,
+            loading: false,
+            notFound: res.status === 404,
+          });
+          return -1;
+        }
+        return res.json();
+      })
+      .then((body: any) => {
+        if (body === -1) return;
+
+        this.setState({
+          name: body.name,
+          gender: body.gender,
+          height: body.height,
+          mass: body.mass,
+        });
+
+        this.getNested(body.species, body.films);
+      })
+      .catch((err: any) => {
+        if (err.name === 'AbortError') return;
+        throw err;
       });
-      return -1;
-    }
+  }
 
-    /* SPECIES */
+  getNested = (speciesURL: string[], filmsURL: string[]): void => {
+    const params: any = {
+      method: 'GET',
+      signal: this.abortController.signal,
+    };
+
     const species: string[] = [];
-    for (let i = 0; i < body.species.length; i += 1) {
-      const speciesResponse: any = await fetch(body.species[i], { method: 'GET' });
-      const speciesBody: any = await speciesResponse.json();
-      if (speciesResponse.status !== 200) {
-        this.setState({
-          error: true,
-          loading: false,
-        });
-
-        return -1;
-      }
-
-      species.push(speciesBody.name);
-    }
-    body.species = species;
-
-    /* FILMS */
     const films: string[] = [];
-    for (let i = 0; i < body.films.length; i += 1) {
-      const filmsResponse: any = await fetch(body.films[i], { method: 'GET' });
-      const filmsBody: any = await filmsResponse.json();
-      if (filmsResponse.status !== 200) {
+
+    const checkDone = (): void => {
+      if (species.length === speciesURL.length && films.length === filmsURL.length) {
         this.setState({
-          error: true,
           loading: false,
+          species,
+          films,
         });
-
-        return -1;
       }
+    };
 
-      films.push(filmsBody.title);
-    }
-    body.films = films;
+    speciesURL.forEach((url: string) => {
+      fetch(url, params)
+        .then((res: any) => {
+          if (res.status !== 200) {
+            this.setState({
+              error: true,
+              loading: false,
+            });
+            return -1;
+          }
+          return res.json();
+        })
+        .then((body: any) => {
+          if (body === -1) return;
 
-    return body;
+          species.push(body.name);
+          checkDone();
+        })
+        .catch((err: any) => {
+          if (err.name === 'AbortError') return;
+          throw err;
+        });
+    });
+
+    filmsURL.forEach((url: string) => {
+      fetch(url, params)
+        .then((res: any) => {
+          if (res.status !== 200) {
+            this.setState({
+              error: true,
+              loading: false,
+            });
+            return -1;
+          }
+          return res.json();
+        })
+        .then((body: any) => {
+          if (body === -1) return;
+
+          films.push(body.title);
+          checkDone();
+        })
+        .catch((err: any) => {
+          if (err.name === 'AbortError') return;
+          throw err;
+        });
+    });
   };
 
   render() {
