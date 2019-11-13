@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
 import loadingImg from '../media/images/loading.png';
@@ -30,7 +30,7 @@ interface State {
 class Details extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    
+
     this.state = {
       loading: true,
       error: false,
@@ -41,69 +41,13 @@ class Details extends Component<Props, State> {
       species: [],
       height: '',
       mass: '',
-      films: []
+      films: [],
     };
   }
 
-  getResponse = async():Promise<any> => {
-    const { id } = this.props.match.params;
-
-    /* BASIC CHARACTER DATA */
-    const basicResponse: any = await fetch(`https://swapi.co/api/people/${id}/`, {method: 'GET'});
-    const body: any = await basicResponse.json();
-    if(basicResponse.status !== 200) {
-      if(basicResponse.status === 404) 
-        this.setState({ notFound: true });
-
-      this.setState({ 
-        error: true,
-        loading: false
-      });
-      return -1;
-    }
-
-    /* SPECIES */
-    let species: string[] = [];
-    for(let i = 0; i < body.species.length; i++) {
-      const speciesResponse: any = await fetch(body.species[i], {method: 'GET'});
-      const speciesBody: any = await speciesResponse.json();
-      if(speciesResponse.status !== 200) {
-        this.setState({ 
-          error: true,
-          loading: false
-        });
-        console.error("Couldn't fetch data from API");
-        return -1;
-      }
-
-      species.push(speciesBody.name);
-    }
-    body.species = species;
-
-    /* FILMS */
-    let films: string[] = [];
-    for(let i = 0; i < body.films.length; i++) {
-      const filmsResponse: any = await fetch(body.films[i], {method: 'GET'});
-      const filmsBody: any = await filmsResponse.json();
-      if(filmsResponse.status !== 200) {
-        this.setState({ 
-          error: true,
-          loading: false
-        });
-        console.error("Couldn't fetch data from API");
-        return -1;
-      }
-
-      films.push(filmsBody.title);
-    }
-    body.films = films;
-
-    return body;
-  }
-
-  componentDidMount () {
+  componentDidMount() {
     this.getResponse().then((res: any) => {
-      if(res === -1) return;
+      if (res === -1) return;
 
       this.setState({
         loading: false,
@@ -113,45 +57,101 @@ class Details extends Component<Props, State> {
         species: res.species,
         height: res.height,
         mass: res.mass,
-        films: res.films
+        films: res.films,
       });
     });
-
-
   }
 
+  getResponse = async ():Promise<any> => {
+    const { match } = this.props;
+    const { id } = match.params;
+
+    /* BASIC CHARACTER DATA */
+    const basicResponse: any = await fetch(`https://swapi.co/api/people/${id}/`, { method: 'GET' });
+    const body: any = await basicResponse.json();
+    if (basicResponse.status !== 200) {
+      if (basicResponse.status === 404) { this.setState({ notFound: true }); }
+
+      this.setState({
+        error: true,
+        loading: false,
+      });
+      return -1;
+    }
+
+    /* SPECIES */
+    const species: string[] = [];
+    for (let i = 0; i < body.species.length; i += 1) {
+      const speciesResponse: any = await fetch(body.species[i], { method: 'GET' });
+      const speciesBody: any = await speciesResponse.json();
+      if (speciesResponse.status !== 200) {
+        this.setState({
+          error: true,
+          loading: false,
+        });
+
+        return -1;
+      }
+
+      species.push(speciesBody.name);
+    }
+    body.species = species;
+
+    /* FILMS */
+    const films: string[] = [];
+    for (let i = 0; i < body.films.length; i += 1) {
+      const filmsResponse: any = await fetch(body.films[i], { method: 'GET' });
+      const filmsBody: any = await filmsResponse.json();
+      if (filmsResponse.status !== 200) {
+        this.setState({
+          error: true,
+          loading: false,
+        });
+
+        return -1;
+      }
+
+      films.push(filmsBody.title);
+    }
+    body.films = films;
+
+    return body;
+  };
+
   render() {
-    if(this.state.notFound)
-      return (<NotFound />);
+    const { notFound, error, loading } = this.state;
 
-    if(this.state.error) 
-      return (<Error />);
+    if (notFound) { return (<NotFound />); }
 
-    if(this.state.loading) 
+    if (error) { return (<Error />); }
+
+    if (loading) {
       return (
         <div className="centered">
           <img src={loadingImg} className="img-loading" alt="Loading..." />
         </div>
       );
+    }
 
-    const { name, gender, species, height, mass, films } = this.state; 
+    const { match } = this.props;
+    const { id } = match.params;
+
+    const {
+      name, gender, species, height, mass, films,
+    } = this.state;
 
     const speciesToString = ():string => {
       let s: string = '';
       species.forEach((spec: string, index: number): void => {
-        if(index !== 0) s += ', ';
-        s +=  spec;
+        if (index !== 0) s += ', ';
+        s += spec;
       });
       return s;
-    }
+    };
 
-    const heightToString = ():string => {
-      return height + (parseInt(height) ? ' cm' : '');
-    }
+    const heightToString = ():string => height + (parseInt(height, 10) ? ' cm' : '');
 
-    const massToString = (): string => {
-      return mass + (parseInt(mass) ? ' kg' : '');
-    }
+    const massToString = (): string => mass + (parseInt(mass, 10) ? ' kg' : '');
 
     return (
       <div className="row">
@@ -175,18 +175,23 @@ class Details extends Component<Props, State> {
           </div>
           <div className="character-info">
             <div className="description">Films:</div>
-            {films.map((film: string, index: number):JSX.Element => {
-              return (<div key={index} className="element">{film}</div>);
-            })}
+            {films.map((film: string, index: number):JSX.Element => (
+              <div
+                key={index.toString()}
+                className="element"
+              >
+                {film}
+              </div>
+            ))}
           </div>
-          <Notes id={this.props.match.params.id} />
+          <Notes id={id} />
         </div>
         <div className="yoda col-xl-4 col-10 offset-xl-2 offset-1">
           <img src={yoda} alt="yoda" />
         </div>
       </div>
-    )
+    );
   }
 }
 
-export default Details
+export default Details;

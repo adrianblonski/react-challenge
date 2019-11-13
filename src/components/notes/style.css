@@ -1,3 +1,7 @@
+.description {
+  display: flex;
+}
+
 .description img {
   width: 25px;
   cursor: pointer;

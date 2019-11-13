@@ -14,67 +14,95 @@ interface State {
 }
 
 class Notes extends Component<Props, State> {
-  editRef: React.RefObject<HTMLTextAreaElement>
+  editRef: React.RefObject<HTMLTextAreaElement>;
 
   constructor(props: Props) {
     super(props);
 
-    this.state = { 
+    this.state = {
       editing: false,
-      value: ''
+      value: '',
     };
 
     this.editRef = React.createRef();
-  }
-
-  getNote = ():void => {
-    const n: string = localStorage.getItem(`character${this.props.id}`);
-    this.setState({
-      editing: false,
-      value: n ? n : '-'
-    });
-  }
-
-  setNote = ():void => {
-    const text: string = this.editRef.current.value;
-    localStorage.setItem(`character${this.props.id}`, text);
-
-    this.getNote();
-  }
-
-  onClickEdit = (): void => {
-    this.setState({ editing: !this.state.editing });
   }
 
   componentDidMount() {
     this.getNote();
   }
 
-  render() {
-    const showNotes = ():JSX.Element => {
-      return (
-        <div className="element">{this.state.value}</div>
-      );
-    }
+  getNote = ():void => {
+    const { id } = this.props;
 
-    const showEdit = ():JSX.Element => {
-      return (
-        <div className="edit">
-          <textarea ref={this.editRef} defaultValue={this.state.value}></textarea>
-          <div className="btn btn-secondary" onClick={this.setNote}>Save</div>
+    const n: string = localStorage.getItem(`character${id}`);
+    this.setState({
+      editing: false,
+      value: n || '-',
+    });
+  };
+
+  setNote = ():void => {
+    const { id } = this.props;
+
+    const text: string = this.editRef.current.value;
+    localStorage.setItem(`character${id}`, text);
+
+    this.getNote();
+  };
+
+  onEdit = (): void => {
+    const { editing } = this.state;
+    this.setState({ editing: !editing });
+  };
+
+  onKeyEdit = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === 'Enter') this.onEdit();
+  };
+
+  onKeySave = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === 'Enter') this.setNote();
+  };
+
+  render() {
+    const { value, editing } = this.state;
+
+    const showNotes = ():JSX.Element => (
+      <div className="element">{value}</div>
+    );
+
+    const showEdit = ():JSX.Element => (
+      <div className="edit">
+        <textarea ref={this.editRef} defaultValue={value} />
+        <div
+          role="button"
+          className="btn btn-secondary"
+          onClick={this.setNote}
+          onKeyDown={this.onKeySave}
+          tabIndex={0}
+        >
+
+          Save
         </div>
-      );
-    }
+      </div>
+    );
 
     return (
       <div className="character-info">
         <div className="description">
           Your note:
-          <img src={edit} alt="Edit" onClick={this.onClickEdit} />
+          <div
+            role="button"
+            className="btn-edit"
+            onClick={this.onEdit}
+            onKeyDown={this.onKeyEdit}
+            tabIndex={0}
+          >
+            <img src={edit} alt="Edit" />
+          </div>
         </div>
-        {this.state.editing ? showEdit() : showNotes()}
+        {editing ? showEdit() : showNotes()}
       </div>
-    )
+    );
   }
 }
 

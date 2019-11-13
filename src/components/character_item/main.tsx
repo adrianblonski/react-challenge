@@ -17,12 +17,14 @@ class CharacterItem extends Component<Props, {}> {
   }
 
   render() {
-    const href = `/characters/${this.props.index}`;
+    const { index, name } = this.props;
+
+    const href = `/characters/${index}`;
     return (
       <Link to={href} className="character-item">
-        <div>{this.props.name}</div>
+        <div>{name}</div>
       </Link>
-    )
+    );
   }
 }
 

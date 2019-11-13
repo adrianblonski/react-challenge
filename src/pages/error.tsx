@@ -1,11 +1,9 @@
-import React, { Component } from 'react'
+import React from 'react';
 
-class Error extends Component<{},{}> {
-  render() {
-    return (
-      <div className="error">API error, try again later.</div>
-    )
-  }
+function Error() {
+  return (
+    <div className="error">API error, try again later.</div>
+  );
 }
 
 export default Error;
